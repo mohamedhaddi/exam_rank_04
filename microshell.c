@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/07 12:01:20 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/07 12:43:40 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,112 +15,139 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+int count_semicolon_seperated_cmds(int argc, char **argv)
+{
+	int i = 1;
+	int count_semicolon_cmds = 1;
+	while (i < argc)
+	{
+		if (strcmp(argv[i], ";") == 0)
+			count_semicolon_cmds++;
+		i++;
+	}
+	return (count_semicolon_cmds);
+}
+
+int count_pipe_seperated_cmds(int argc, char **argv)
+{
+	static int i = 1;
+	int count_pipe_cmds = 1;
+
+	while (i < argc)
+	{
+		if (strcmp(argv[i], ";") == 0)
+		{
+			i++;
+			break;
+		}
+		if (strcmp(argv[i], "|") == 0)
+			count_pipe_cmds++;
+		i++;
+	}
+
+	return (count_pipe_cmds);
+}
+
+int get_command_size(int i_argv, int argc, char **argv)
+{
+	int i = i_argv;
+	int size = 0;
+	while (i < argc)
+	{
+		if (strcmp(argv[i], ";") == 0 || strcmp(argv[i], "|") == 0)
+			break;
+		size++;
+		i++;
+	}
+	return (size);
+}
+
 int main(int argc, char **argv, char **env)
 {
 	if (argc == 1)
 		return (0);
 
-	int argv_i = 1;
-	int count_sep_cmds = 1;
-	while (argv_i < argc)
+	// count how many commnads are seperated by ; and create an array of ints
+	// to store the numbers of commands seperated by | in each command
+	int semicolon_cmds_num = count_semicolon_seperated_cmds(argc, argv);
+	int semicolon_cmds[semicolon_cmds_num];
+
+	// for each command seperated by ;, count how many commands are seperated by |
+	int i = 0;
+	while (i < semicolon_cmds_num)
 	{
-		if (strcmp(argv[argv_i], ";") == 0)
-			count_sep_cmds++;
-		argv_i++;
+		semicolon_cmds[i] = count_pipe_seperated_cmds(argc, argv);
+		i++;
 	}
 
-	int sep_cmds_num[count_sep_cmds];
-
-	argv_i = 1;
-	int sep_cmds_i = 0;
-	while (sep_cmds_i < count_sep_cmds)
+	// loop through the commands seperated by ;
+	int i_argv = 1;
+	int i_semicolon_cmds = 0;
+	while (i_semicolon_cmds < semicolon_cmds_num)
 	{
-		int count_pipe_cmds = 1;
-		while (argv_i < argc)
+		// loop through the commands seperated by |
+		int pipe_cmds_num = semicolon_cmds[i_semicolon_cmds];
+		pid_t pids[pipe_cmds_num];
+		int new_fds[2], old_fds[2];
+		int i_pipe_cmds = 0;
+		while (i_pipe_cmds < pipe_cmds_num)
 		{
-			if (strcmp(argv[argv_i], ";") == 0)
-			{
-				argv_i++;
-				break;
-			}
-			if (strcmp(argv[argv_i], "|") == 0)
-				count_pipe_cmds++;
-			argv_i++;
-		}
-		sep_cmds_num[sep_cmds_i] = count_pipe_cmds;
-		sep_cmds_i++;
-	}
-
-	argv_i = 1;
-	sep_cmds_i = 0;
-	while (sep_cmds_i < count_sep_cmds)
-	{
-		int pipe_cmds_num = sep_cmds_num[sep_cmds_i];
-		int pipe_cmds_i = 0;
-		int new_fds[2];
-		int old_fds[2];
-		int pids[pipe_cmds_num];
-		while (pipe_cmds_i < pipe_cmds_num)
-		{
-			// exec args
-			int cmd_size = 0;
-			while (
-				argv_i + cmd_size < argc
-				&& strcmp(argv[argv_i + cmd_size], "|")
-				&& strcmp(argv[argv_i + cmd_size], ";")
-			)
-			{
-				cmd_size++;
-			}
+			// create args for execve
+			int cmd_size = get_command_size(i_argv, argc, argv);
 			char *args[cmd_size + 1];
-			int args_i = 0;
-			while (args_i < cmd_size)
+			int i = 0;
+			while (i < cmd_size)
 			{
-				args[args_i] = argv[argv_i];
-				args_i++;
-				argv_i++;
+				args[i] = argv[i_argv];
+				i_argv++;
+				i++;
 			}
-			args[args_i] = NULL;
+			args[i] = NULL;
 
 			// pipes
-			if (pipe_cmds_i != pipe_cmds_num - 1) // if there is a next command
+			if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
 				pipe(new_fds);
 			pid_t pid = fork();
 			if (pid == 0)
 			{
-				if (pipe_cmds_i != 0) // if there is a previous command
+				if (i_pipe_cmds != 0) // if there is a previous command
 				{
 					dup2(old_fds[0], 0);
 					close(old_fds[0]);
 					close(old_fds[1]);
 				}
-				if (pipe_cmds_i != pipe_cmds_num - 1) // if there is a next command
+				if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
 				{
 					close(new_fds[0]);
 					dup2(new_fds[1], 1);
 					close(new_fds[1]);
 				}
 				
-				if (execve(args[0], args, env) == -1)
+				if (strcmp(args[0], "cd") == 0)
+				{
+					if (chdir(args[1]) == -1)
+						perror("cd");
+				}
+				else if (execve(args[0], args, env) == -1)
 					printf("%s: command not found\n", args[0]);
 			}
 			else
 			{
-				pids[pipe_cmds_i] = pid;
-				if (pipe_cmds_i != 0) // if there is a previous command
+				pids[i_pipe_cmds] = pid;
+				if (i_pipe_cmds != 0) // if there is a previous command
 				{
 					close(old_fds[0]);
 					close(old_fds[1]);
 				}
-				if (pipe_cmds_i != pipe_cmds_num - 1) // if there is a next command
+				if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
 				{
 					for (int i = 0; i < 2; i++)
 						old_fds[i] = new_fds[i];
 				}
 			}
 
-			argv_i++;
-			pipe_cmds_i++;
+			i_argv++;
+			i_pipe_cmds++;
 		}
 		if (pipe_cmds_num > 1) // if there are multiple commands
 		{
@@ -130,7 +157,7 @@ int main(int argc, char **argv, char **env)
 		for (int i = 0; i < pipe_cmds_num; i++)
 			waitpid(pids[i], NULL, 0);
 
-		sep_cmds_i++;
+		i_semicolon_cmds++;
 	}
 
 	return (0);
