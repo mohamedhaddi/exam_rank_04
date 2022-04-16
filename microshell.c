@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/16 22:08:17 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/16 22:20:07 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv, char **env)
 			while (i < cmd_size) // copy from argv to args
 			{
 				args[i] = argv[i_argv];
-				i_argv++;
+				i_argv++; // by the end of all iterations of this loop, i_argv will be the index of either: ";" or "|" or the end of argv (NULL)
 				i++;
 			}
 			args[i] = NULL;
