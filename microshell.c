@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/16 22:05:11 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/16 22:08:17 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv, char **env)
 		return (0);
 
 	int i_argv = 1; // index to loop through argv
-	while (i_argv < argc)
+	while (i_argv < argc) // i_argv will be incremented so that every iteration of this loop will be operating on the next semicolon-seperated command
 	{
 		/* do stuff for current semicolon-seperated commmad */
 
