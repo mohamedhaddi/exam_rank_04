@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/16 18:43:24 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/16 19:01:28 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv, char **env)
 				}
 			}
 
-			i_argv++; // escape the "|" or ";" argument (this is where we left-off after copying from argv to args)
+			i_argv++; // escape the "|" or ";" argument (this is where we left off after copying from argv to args)
 			i_pipe_cmds++; // continue to next pipe-seperated command
 		}
 
