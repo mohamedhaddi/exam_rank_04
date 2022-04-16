@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/16 23:08:07 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/16 23:17:38 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,9 +87,9 @@ int main(int argc, char **argv, char **env)
 			 * ```
 			 *
 			 * this code avoids mangling the parent's stdin and stdout,
-			 * only manipulating them within the child, and never leaks any FDs
-			 * source: https://stackoverflow.com/a/917700/4273342
+			 * it only manipulates them within the child, and never leaks any FDs.
 			 *
+			 * source: https://stackoverflow.com/a/917700/4273342
 			 */
 
 			if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
@@ -210,7 +210,7 @@ int get_command_size(int i_argv, int argc, char **argv)
 	return (size);
 }
 
-void fatal() // to call whenever a system call (other than execve and chdir) fails
+void fatal()
 {
 	write(2, "error: fatal\n", 13);
 	exit(1);
