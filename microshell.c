@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/16 18:11:50 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/16 18:43:24 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,90 +15,26 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-void fatal() // to call whenever a system call (other than execve and chdir) fails
-{
-	write(2, "error: fatal\n", 13);
-	exit(1);
-}
-
-int count_semicolon_seperated_cmds(int argc, char **argv)
-{
-	int i = 1;
-	int count_semicolon_cmds = 1;
-	while (i < argc)
-	{
-		if (strcmp(argv[i], ";") == 0)
-			count_semicolon_cmds++;
-		i++;
-	}
-	return (count_semicolon_cmds);
-}
-
-int count_pipe_seperated_cmds(int argc, char **argv)
-{
-	static int i = 1;
-	int count_pipe_cmds = 1;
-
-	while (i < argc)
-	{
-		if (strcmp(argv[i], ";") == 0)
-		{
-			i++;
-			break;
-		}
-		if (strcmp(argv[i], "|") == 0)
-			count_pipe_cmds++;
-		i++;
-	}
-
-	return (count_pipe_cmds);
-}
-
-int get_command_size(int i_argv, int argc, char **argv)
-{
-	int i = i_argv;
-	int size = 0;
-	while (i < argc)
-	{
-		if (strcmp(argv[i], ";") == 0 || strcmp(argv[i], "|") == 0)
-			break;
-		size++;
-		i++;
-	}
-	return (size);
-}
+int count_pipe_seperated_cmds(int i_argv, int argc, char **argv);
+int get_command_size(int i_argv, int argc, char **argv);
+void fatal();
 
 int main(int argc, char **argv, char **env)
 {
 	if (argc == 1)
 		return (0);
 
-	// count how many commnads are seperated by ; and create an array of ints
-	// to store the numbers of commands seperated by | in each command
-	int semicolon_cmds_num = count_semicolon_seperated_cmds(argc, argv);
-	int semicolon_cmds[semicolon_cmds_num];
-
-	// for each command seperated by ;, count how many commands are seperated by |
-	int i = 0;
-	while (i < semicolon_cmds_num)
-	{
-		semicolon_cmds[i] = count_pipe_seperated_cmds(argc, argv);
-		i++;
-	}
-
-	int i_argv = 1; // argv index
-	int i_semicolon_cmds = 0; // semicolon_cmds index
-
-	while (i_semicolon_cmds < semicolon_cmds_num) // loop through the commands seperated by ;
+	int i_argv = 1; // index to loop through argv
+	while (i_argv < argc && strcmp(argv[i_argv], ";")) // loop through all semicolon-seperated commands
 	{
 		/* do stuff for current semicolon-seperated commmad */
 
-		int i_pipe_cmds = 0; // pipe_cmds index
-		int pipe_cmds_num = semicolon_cmds[i_semicolon_cmds]; // number of pipe-seperated cmds in current semicolon-seperated cmd
-		int new_fds[2], old_fds[2]; // pipe fds
+		int pipe_cmds_num = count_pipe_seperated_cmds(i_argv, argc, argv); // number of pipe-seperated commands in the current semicolon-seperated command
 		pid_t pids[pipe_cmds_num]; // array of pids
+		int i_pipe_cmds = 0; // index to loop through pipe-seperated commands
+		int new_fds[2], old_fds[2]; // pipe fds
 
-		while (i_pipe_cmds < pipe_cmds_num) // loop through the commands seperated by |
+		while (i_pipe_cmds < pipe_cmds_num) // loop through all pipe-seperated commands
 		{
 			/* do stuff for current pipe-seperated commmad */
 
@@ -116,20 +52,21 @@ int main(int argc, char **argv, char **env)
 
 			// pipes
 			if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
-				pipe(new_fds); // TODO: if failed, call fatal()
-			pid_t pid = fork(); // TODO: if failed, call fatal()
+				if (pipe(new_fds) == -1) fatal(); // create pipe
+			pid_t pid = fork(); // fork
+			if (pid == -1) fatal();
 			if (pid == 0)
 			{
 				if (i_pipe_cmds != 0) // if there is a previous command
 				{
-					dup2(old_fds[0], 0); // TODO: if failed, call fatal()
+					if (dup2(old_fds[0], 0) == -1) fatal();
 					close(old_fds[0]);
 					close(old_fds[1]);
 				}
 				if (i_pipe_cmds != pipe_cmds_num - 1) // if there is a next command
 				{
 					close(new_fds[0]);
-					dup2(new_fds[1], 1); // TODO: if failed, call fatal()
+					if (dup2(new_fds[1], 1) == -1) fatal();
 					close(new_fds[1]);
 				}
 				
@@ -176,10 +113,8 @@ int main(int argc, char **argv, char **env)
 				}
 			}
 
-			// go to next pipe-seperated command
-			i_pipe_cmds++;
-
 			i_argv++; // escape the "|" or ";" argument (this is where we left-off after copying from argv to args)
+			i_pipe_cmds++; // continue to next pipe-seperated command
 		}
 
 		if (pipe_cmds_num > 1) // if there are multiple commands
@@ -190,11 +125,43 @@ int main(int argc, char **argv, char **env)
 
 		// wait for all child processes to finish
 		for (int i = 0; i < pipe_cmds_num; i++)
-			waitpid(pids[i], NULL, 0); // TODO: if failed, call fatal()
+			if (waitpid(pids[i], NULL, 0) == -1) fatal();
 
-		// go to next semicolon-seperated command
-		i_semicolon_cmds++;
+		// continue to next semicolon-seperated command
 	}
 
 	return (0);
+}
+
+int count_pipe_seperated_cmds(int i_argv, int argc, char **argv)
+{
+	int i = i_argv;
+	int count_pipe_cmds = 1;
+
+	while (i < argc && strcmp(argv[i], ";"))
+	{
+		if (strcmp(argv[i], "|") == 0)
+			count_pipe_cmds++;
+		i++;
+	}
+
+	return (count_pipe_cmds);
+}
+
+int get_command_size(int i_argv, int argc, char **argv)
+{
+	int i = i_argv;
+	int size = 0;
+	while (i < argc && strcmp(argv[i], ";") && strcmp(argv[i], "|"))
+	{
+		size++;
+		i++;
+	}
+	return (size);
+}
+
+void fatal() // to call whenever a system call (other than execve and chdir) fails
+{
+	write(2, "error: fatal\n", 13);
+	exit(1);
 }
