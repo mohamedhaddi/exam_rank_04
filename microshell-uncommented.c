@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   microshell-uncommented.c                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/04/17 18:50:54 by mhaddi            #+#    #+#             */
+/*   Updated: 2022/04/17 18:50:59 by mhaddi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -9,9 +21,6 @@ void fatal();
 
 int main(int argc, char **argv, char **env)
 {
-	if (argc == 1)
-		return (0);
-
 	int i_argv = 1;
 	while (i_argv < argc)
 	{
