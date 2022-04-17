@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   microshell.c                                       :+:      :+:    :+:   */
+/*   microshell-commented.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/17 18:51:10 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/17 18:57:23 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv, char **env)
 			 * END PIPING
 			 */
 
-			i_argv++; // escape the "|" or ";" argument (this is where we left off after copying from argv to args)
+			i_argv++; // skip the "|" or ";" argument (this is where we left off after copying from argv to args)
 			i_pipe_cmds++; // continue to next pipe-seperated command
 		}
 		if (pipe_cmds_num > 1) // if there are multiple commands
