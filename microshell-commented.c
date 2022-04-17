@@ -6,7 +6,7 @@
 /*   By: mhaddi <mhaddi@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 14:36:47 by mhaddi            #+#    #+#             */
-/*   Updated: 2022/04/17 18:57:23 by mhaddi           ###   ########.fr       */
+/*   Updated: 2022/04/17 19:00:26 by mhaddi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv, char **env)
 			/* do stuff for current pipe-seperated commmad */
 
 			// create args for execve
-			int cmd_size = get_command_size(i_argv, argc, argv); // get the size of current command (program + number of args)
+			int cmd_size = get_command_size(i_argv, argc, argv); // get the size of current command (program name + number of args)
 			char *args[cmd_size + 1]; // create args array, +1 for NULL
 			int i = 0;
 			while (i < cmd_size) // copy from argv to args
@@ -160,7 +160,7 @@ int main(int argc, char **argv, char **env)
 
 void cd(int cmd_size, char **args)
 {
-	if (cmd_size != 2) // shouldn't be more or less than 2 args
+	if (cmd_size != 2) // shouldn't be more or less than 2 (cd + 1 arg)
 	{
 		write(2, "error: cd: bad arguments\n", 25);
 		exit(1); // exit process with error
